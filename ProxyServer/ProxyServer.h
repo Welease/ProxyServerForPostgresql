@@ -19,7 +19,7 @@
 # define RED  "\e[31m"
 # define YELLOW "\e[1;33m"
 # define BLUE "\e[1;34m"
-# define BUFSIZE 1000000
+# define BUF_SIZE 1000000
 class Client;
 
 class ProxyServer {
@@ -27,9 +27,9 @@ class ProxyServer {
 private:
     std::string     _ip;
     int             _port;
-    sockaddr_in     _socket_addr;
-    socklen_t       _address_len;
-    int             _fd;
+    sockaddr_in     _sockAddr;
+    socklen_t       _addrLen;
+    int             _socket;
     int             _flag;
     int             _fdLog;
 

@@ -3,8 +3,9 @@
 
 #include "../DataChunks/DataChunks.h"
 #include <fcntl.h>
-#include "../DBconnecter/DbConnecter.h"
-class DbConnecter;
+#include "../DbConnector/DbConnector.h"
+
+class DbConnector;
 enum Phase {
     start = 0,
     parseRequest,
@@ -25,7 +26,7 @@ private:
     std::string     _userName;
     std::string     _dbName;
     size_t          _sendBytes;
-    DbConnecter     *_dbConnecter;
+    DbConnector     *_dbConnector;
 
 public:
     explicit Client(int & sock, int & logFd);

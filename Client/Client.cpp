@@ -8,7 +8,7 @@ Client::Client(int &sock, int & logFd) {
     _phase = start;
     _sendBytes = 0;
     fcntl(_socket, F_SETFL, O_NONBLOCK);
-    _dbConnecter = new DbConnecter();
+    _dbConnector = new DbConnector();
     _numOfRequest = 0;
 }
 
@@ -20,7 +20,6 @@ void Client:: clear() {
 
     _request = new DataChunks();
     _response = new DataChunks();
-    std::cout << "clear client" << std::endl;
 }
 
 Client::~Client() {
@@ -28,7 +27,6 @@ Client::~Client() {
     delete _request;
     _phase = start;
     _sendBytes = 0;
-    std::cout << "destruct of client" << std::endl;
 }
 
 void Client::parseStartupData() {
@@ -83,12 +81,12 @@ void Client::makeLog() {
 }
 
 void Client::sendRequestToDb() {
-    _dbConnecter->sendResponseToBd(_request);
+    _dbConnector->sendResponseToBd(_request);
     _phase = recieveResponse;
 }
 
 void Client::getResponseFromDb() {
-    _response = _dbConnecter->getResponseFromDb();
+    _response = _dbConnector->getResponseFromDb();
     _phase = sendResponse;
 }
 
@@ -105,4 +103,4 @@ void Client::setPhase(int phase) { _phase = phase; }
 
 void Client::setSendBytes(size_t n) { _sendBytes = n; }
 
-int Client::getDbSocket() const { return _dbConnecter->getFd(); }
+int Client::getDbSocket() const { return _dbConnector->getSocket(); }
