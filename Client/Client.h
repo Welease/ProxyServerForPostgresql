@@ -3,6 +3,7 @@
 
 #include "../DataChunks/DataChunks.h"
 #include <fcntl.h>
+#include <map>
 #include "../DbConnector/DbConnector.h"
 
 class DbConnector;
@@ -25,10 +26,13 @@ private:
     int             _numOfRequest;
     std::string     _userName;
     std::string     _dbName;
+    std::string     _protocol;
+    std::string     _packetLength;
     size_t          _sendBytes;
-    DbConnector     *_dbConnector;
 
+    DbConnector     *_dbConnector;
 public:
+    std::map<unsigned char, std::string> protoTypes;
     explicit Client(int & sock, int & logFd);
     ~Client();
 
@@ -46,6 +50,7 @@ public:
     void          makeLog();
     void          sendRequestToDb();
     void          getResponseFromDb();
+    void          fillTypesMap();
 };
 
 

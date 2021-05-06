@@ -5,7 +5,7 @@ DbConnector::DbConnector() {
         ;//todo exc
     }
     _servAddr.sin_family = PF_INET;
-    _servAddr.sin_port = htons(5432);
+    _servAddr.sin_port = htons(3306);
 
     if (inet_pton(AF_INET, "127.0.0.1", &_servAddr.sin_addr) <= 0) {
         ; //todo exc
