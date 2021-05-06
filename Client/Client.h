@@ -56,7 +56,6 @@ public:
     void          getResponseFromDb();
 
 private:
-    void          parseStartupData();
     void          makeLog();
 
     void          fillTypesMap();

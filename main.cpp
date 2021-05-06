@@ -11,10 +11,10 @@ int main(int argc, char **argv) {
             std::cout << RED << "Incorrect file from logs" << DEFAULT << std::endl;
             return 0;
         }
-        auto *proxyServer = new ProxyServer(proxyIp, dbIp, proxyPort,dbPort, fdLog);
         try {
-            proxyServer->initialization();
-            proxyServer->startMainLoop();
+            ProxyServer proxyServer(proxyIp, dbIp, proxyPort,dbPort, fdLog);
+            proxyServer.initialization();
+            proxyServer.startMainLoop();
         } catch (std::exception & ex) {
             std::cout << RED << ex.what()  << DEFAULT << std::endl;
         }

@@ -33,24 +33,11 @@ Client::~Client() {
     _sendBytes = 0;
 }
 
-void Client::parseStartupData() {
-    const char * tmp = reinterpret_cast<const char *>(_request->toPointer());
-
-    size_t endOfUserName = _request->findDataFragment(reinterpret_cast<const unsigned char *>(" - "), 3);
-    if (endOfUserName != NOT_FOUND) {
-        _userName = std::string(tmp + 8, endOfUserName - 8);
-        _dbName = std::string(tmp + endOfUserName + 6, _request->getDataSize() - endOfUserName - 5);
-    }
-    free((void *) tmp);
-}
-
 void Client::addRequest(unsigned char *data, size_t size) {
     _request->addData(data, size);
     _phase = sendRequest;
     _numOfRequest++;
-    if (_numOfRequest == 1)
-        parseStartupData();
-    else if (_numOfRequest > 2) makeLog();
+    makeLog();
 }
 
 int Client::getIntFromHex(unsigned char *hex) {
@@ -69,19 +56,20 @@ void Client::makeLog() {
     char		timeBuff[100];
 
     time_t time_ = time(nullptr);
+    unsigned char *tmp = _request->toPointer();
     struct tm * local = localtime(&time_);
     size_t timeLen = strftime(timeBuff, 80, "%F %X ", local);
-    unsigned char *tmp = _request->toPointer();
-    _packetLength = std::to_string(getIntFromHex(tmp + 1));
+    _packetLength = std::to_string(getIntFromHex(_numOfRequest == 1 ? tmp : (tmp + 1)));
     auto key = messageTypes.find(tmp[0]);
     if (key != messageTypes.end())
         _protocol = key->second;
-    writeInfo("FROM: ", 6, _userName.c_str(), _userName.length());
-    writeInfo("DATABASE NAME: ", 15, _dbName.c_str(), _dbName.length());
+    if (_numOfRequest == 1) {
+        _protocol = messageTypes.find('-')->second;
+    }
     writeInfo("DATE: ", 6, timeBuff, timeLen);
     writeInfo("PAYLOAD LENGTH: ", 16, _packetLength.c_str(), _packetLength.length());
     writeInfo("MESSAGE TYPE: ", 14, _protocol.c_str(), _protocol.length());
-    for (size_t i = 5; i < _request->getDataSize() - 1; ++i) {
+    for (size_t i = _numOfRequest == 1 ? 8 : 5; i < _request->getDataSize() - 1; ++i) {
         write(_logFd, &tmp[i], 1);
         if (tmp[i] == ';' && i != _request->getDataSize() - 1) write(_logFd, "\n", 1);
     }
@@ -130,5 +118,4 @@ void Client::fillTypesMap() {
     messageTypes.insert(std::pair<unsigned char, std::string>('p', "PasswordMessage"));
     messageTypes.insert(std::pair<unsigned char, std::string>('S', "Sync"));
     messageTypes.insert(std::pair<unsigned char, std::string>('X', "Terminate"));
-
 }
