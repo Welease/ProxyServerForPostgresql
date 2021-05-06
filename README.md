@@ -21,7 +21,7 @@ Termination of the session is normally by frontend choice, but can be forced by 
 
 An example of log:
 
-![image](https://user-images.githubusercontent.com/68387788/117287933-9a695b00-ae73-11eb-8c6c-6c5dd962d278.png)
+![image](https://user-images.githubusercontent.com/68387788/117294118-f08dcc80-ae7a-11eb-9248-6a95f4c9008c.png)
 
 
 
