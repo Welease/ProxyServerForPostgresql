@@ -1,6 +1,7 @@
 #ProxyServerForPostgresql
 
 Usage: ./proxy "proxy server ip" "proxy server port" "database host ip" "database port" "file for logs"
+
 Before starting, please disable the SSL.
 
 Proxy server: How does it works? 
