@@ -4,7 +4,8 @@ Usage: ./proxy "proxy server ip" "proxy server port" "database host ip" "databas
 
 Before starting, please disable the SSL.
 
-Proxy server: How does it works? 
+How does it works? 
+
 Clients can connect to the proxy server on a specific port and send requests. The proxy server redirects requests received from the client to the SQL server. During the redirection process, the program parses the information contained in the request and logs it to a file. Upon receipt of responses from the SQL server, the response is sent back to the client.
 
 Interaction is shown in the picture:
