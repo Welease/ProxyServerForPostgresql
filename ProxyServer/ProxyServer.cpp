@@ -92,6 +92,7 @@ void ProxyServer::requestProcessing(std::vector<Client *> &clients, fd_set &read
     for (auto & client : clients) {
         if (FD_ISSET(client->getSocket(), &readSet)) {
             ret = recv(client->getSocket(), buf, BUF_SIZE, 0);
+            std::cout << RED << ret << DEFAULT << std::endl;
             if (ret <= 0) client->setPhase(closing);
             else client->addRequest(buf, ret);
         }

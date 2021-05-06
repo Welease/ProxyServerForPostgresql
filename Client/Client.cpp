@@ -1,3 +1,4 @@
+#include <cmath>
 #include "Client.h"
 
 Client::Client(int &sock, int & logFd) {
@@ -44,50 +45,50 @@ void Client::parseStartupData() {
 }
 
 void Client::addRequest(unsigned char *data, size_t size) {
+    std::cout << data[0] << std::endl;
     _request->addData(data, size);
     _phase = sendRequest;
     _numOfRequest++;
     if (_numOfRequest == 1)
         parseStartupData();
-    else if (_numOfRequest > 2) makeLog();
+    else makeLog();
+}
+
+int Client::getIntFromHex(unsigned char *hex) {
+    std::cout << int(hex[0]) << " " << int(hex[1]) << " " << int(hex[2]) << " " << int(hex[3]) << std::endl;
+    return (int(hex[0]) * int(std::pow(16, 4)) + int(hex[1]) * int(std::pow(16, 3)) +
+            int(hex[2]) * int(std::pow(16, 2)) + int(hex[3]));
+}
+
+void Client::writeInfo(const char *header, size_t len1, const char *message, size_t len) {
+    write(_logFd, header, len1);
+    for (size_t i = 0; i < len; ++i)
+        if (message[i] != '\0') write(_logFd, &message[i], 1);
+    write(_logFd, "\n", 1);
 }
 
 void Client::makeLog() {
-    struct tm*	local;
-    time_t		time_;
     char		timeBuff[100];
-    size_t		timeLen;
 
-    time_ = time(nullptr);
-    local = localtime(&time_);
-    timeLen = strftime(timeBuff, 80, "%F %X ", local);
+    time_t time_ = time(nullptr);
+    struct tm * local = localtime(&time_);
+    size_t timeLen = strftime(timeBuff, 80, "%F %X ", local);
     unsigned char *tmp = _request->toPointer();
-    _packetLength = std::to_string(int(int(tmp[0]) | int(tmp[1]) << 8 | int(tmp[2]) << 16));
-    _protocol = protoTypes.find(tmp[4])->second;
-    write(_logFd, "FROM: ", 6);
-    for (size_t i = 0; i < _userName.length(); ++i) {
-        if (_userName[i] != '\0') write(_logFd, &_userName[i], 1);
-    }
-    write(_logFd, "\n", 1);
-    write(_logFd, "DATABASE NAME: ", 15);
-    for (size_t i = 0; i < _dbName.length(); ++i) {
-        if (_dbName[i] != '\0') write(_logFd, &_dbName[i], 1);
-    }
-    write(_logFd, "\n", 1);
-    write(_logFd, "DATE: ", 6);
-    write(_logFd, timeBuff, timeLen);
-    write(_logFd, "\n", 1);
-    write(_logFd, "PAYLOAD LENGTH: ", 16);
-    write(_logFd, _packetLength.c_str(), _packetLength.length());
-    write(_logFd, "\n", 1);
-    write(_logFd, "SEQUENCE ID: ", 13);
-    write(_logFd, _protocol.c_str(), _protocol.length());
-    write(_logFd, "\n", 1);
+    _packetLength = std::to_string(getIntFromHex(tmp + 1));
+    std::cout << "PACK length: " << _packetLength << std::endl;
+    auto key = messageTypes.find(tmp[4]);
+    if (key != messageTypes.end())
+        _protocol = key->second;
+    writeInfo("FROM: ", 6, _userName.c_str(), _userName.length());
+    writeInfo("DATABASE NAME: ", 15, _dbName.c_str(), _dbName.length());
+    writeInfo("DATE: ", 6, timeBuff, timeLen);
+    writeInfo("PAYLOAD LENGTH: ", 16, _packetLength.c_str(), _packetLength.length());
+    writeInfo("MESSAGE TYPE: ", 14, _protocol.c_str(), _protocol.length());
     for (size_t i = 5; i < _request->getDataSize() - 1; ++i) {
         write(_logFd, &tmp[i], 1);
         if (tmp[i] == ';' && i != _request->getDataSize() - 1) write(_logFd, "\n", 1);
     }
-    write(_logFd, "\n\n\n", 3);
+    write(_logFd, "--------------------------------------------------", 50);
     free(tmp);
 }
 
@@ -117,12 +118,20 @@ void Client::setSendBytes(size_t n) { _sendBytes = n; }
 int Client::getDbSocket() const { return _dbConnector->getSocket(); }
 
 void Client::fillTypesMap() {
+    messageTypes.insert(std::pair<unsigned char, std::string>('B', "Bind"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('C', "Close"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('d', "CopyData"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('c', "CopyDone"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('f', "CopyFail"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('E', "Execute"));
+    messageTypes.insert(std::pair<unsigned char, std::string> ('H', "Flush"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('P', "Parse"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('D', "Describe"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('F', "FunctionCall"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('Q', "Query"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('-', "StartupMessage"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('p', "PasswordMessage"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('S', "Sync"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('X', "Terminate"));
 
-    protoTypes.insert(std::pair<unsigned char, std::string>('Q', "COM_QUERY"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(3, "COM_QUERY"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(0, "COM_SLEEP"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(1, "COM_QUIT"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(5, "COM_CREATE_DB"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(6, "COM_DROP_DB"));
-    protoTypes.insert(std::pair<unsigned char, std::string>(9, "COM_STATISTICS"));
 }

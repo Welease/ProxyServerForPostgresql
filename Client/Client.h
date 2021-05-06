@@ -32,7 +32,7 @@ private:
 
     DbConnector     *_dbConnector;
 public:
-    std::map<unsigned char, std::string> protoTypes;
+    std::map<unsigned char, std::string> messageTypes;
     explicit Client(int & sock, int & logFd);
     ~Client();
 
@@ -51,6 +51,8 @@ public:
     void          sendRequestToDb();
     void          getResponseFromDb();
     void          fillTypesMap();
+    int           getIntFromHex(unsigned char *hex);
+    void          writeInfo(const char *header, size_t len1, const char *message, size_t len);
 };
 
 
