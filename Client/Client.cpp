@@ -37,25 +37,21 @@ void Client::parseStartupData() {
     size_t endOfUserName = _request->findDataFragment(reinterpret_cast<const unsigned char *>(" - "), 3);
     if (endOfUserName != NOT_FOUND) {
         _userName = std::string(tmp + 8, endOfUserName - 8);
-        std::cout << RED << _userName << std::endl;
         _dbName = std::string(tmp + endOfUserName + 6, _request->getDataSize() - endOfUserName - 5);
-        std::cout << BLUE << _dbName << DEFAULT << std::endl;
     }
     free((void *) tmp);
 }
 
 void Client::addRequest(unsigned char *data, size_t size) {
-    std::cout << data[0] << std::endl;
     _request->addData(data, size);
     _phase = sendRequest;
     _numOfRequest++;
     if (_numOfRequest == 1)
         parseStartupData();
-    else makeLog();
+    else if (_numOfRequest > 2) makeLog();
 }
 
 int Client::getIntFromHex(unsigned char *hex) {
-    std::cout << int(hex[0]) << " " << int(hex[1]) << " " << int(hex[2]) << " " << int(hex[3]) << std::endl;
     return (int(hex[0]) * int(std::pow(16, 4)) + int(hex[1]) * int(std::pow(16, 3)) +
             int(hex[2]) * int(std::pow(16, 2)) + int(hex[3]));
 }
@@ -75,8 +71,7 @@ void Client::makeLog() {
     size_t timeLen = strftime(timeBuff, 80, "%F %X ", local);
     unsigned char *tmp = _request->toPointer();
     _packetLength = std::to_string(getIntFromHex(tmp + 1));
-    std::cout << "PACK length: " << _packetLength << std::endl;
-    auto key = messageTypes.find(tmp[4]);
+    auto key = messageTypes.find(tmp[0]);
     if (key != messageTypes.end())
         _protocol = key->second;
     writeInfo("FROM: ", 6, _userName.c_str(), _userName.length());
@@ -88,7 +83,7 @@ void Client::makeLog() {
         write(_logFd, &tmp[i], 1);
         if (tmp[i] == ';' && i != _request->getDataSize() - 1) write(_logFd, "\n", 1);
     }
-    write(_logFd, "--------------------------------------------------", 50);
+    write(_logFd, "\n------------------------------------------------\n", 50);
     free(tmp);
 }
 

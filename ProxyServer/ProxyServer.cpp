@@ -22,8 +22,7 @@ void ProxyServer::initialization() {
         bind(_socket, (const struct sockaddr *) &_sockAddr, _addrLen) ||
         fcntl(_socket, F_SETFL, O_NONBLOCK) ||
         listen(_socket, 2048)) {
-        std::cout << RED << "ERROR in initialization" << DEFAULT << std::endl;
-        exit(1);
+        throw initErrorException();
     }
 }
 
@@ -61,7 +60,7 @@ void ProxyServer::addNewClients(fd_set &readSet, std::vector<Client *> &clients)
         fd = accept(_socket, 0, 0);
         if (fd > 0) {
             clients.push_back(new Client(fd, _fdLog));
-            std::cout << YELLOW << "Client successfully connected!" << DEFAULT << std::endl;
+            std::cout << YELLOW << "New client successfully connected" << DEFAULT << std::endl;
         }
     }
 }
@@ -73,14 +72,13 @@ void ProxyServer::sendingResponse(Client *&client) {
     response = client->getResponse()->toPointer();
     ret = write(client->getSocket(), response + client->getSendBytes(), client->getResponse()->getDataSize() - client->getSendBytes());
     if (ret <= 0) {
-        std::cout << RED << "Error in write" << DEFAULT << std::endl;
         client->setPhase(closing);
         return;
     }
     client->setSendBytes(client->getSendBytes() + ret);
     free(response);
     if (client->getSendBytes() == client->getResponse()->getDataSize()) {
-        std::cout << GREEN << "Response send" << DEFAULT << std::endl;
+        std::cout << GREEN << "Response successfully send" << DEFAULT << std::endl;
         client->clear();
     }
 }
@@ -92,7 +90,7 @@ void ProxyServer::requestProcessing(std::vector<Client *> &clients, fd_set &read
     for (auto & client : clients) {
         if (FD_ISSET(client->getSocket(), &readSet)) {
             ret = recv(client->getSocket(), buf, BUF_SIZE, 0);
-            std::cout << RED << ret << DEFAULT << std::endl;
+            std::cout << BLUE << "Got new request, start to processing..." << DEFAULT << std::endl;
             if (ret <= 0) client->setPhase(closing);
             else client->addRequest(buf, ret);
         }
