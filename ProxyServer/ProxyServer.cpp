@@ -2,14 +2,19 @@
 
 int working = 1;
 
-ProxyServer::ProxyServer(std::string & ip, int & port, int & fd) : _ip(ip),
+ProxyServer::ProxyServer(std::string & ip, std::string & dbIp,  int & port, int & dbPort, int & fd) :
+                                                                   _ip(ip),
+                                                                   _dbIp(dbIp),
                                                                    _port(port),
+                                                                   _dbPort(dbPort),
                                                                    _socket(-1),
                                                                    _flag(true),
                                                                    _fdLog(fd){
 }
 
-ProxyServer::~ProxyServer() = default;
+ProxyServer::~ProxyServer() {
+    close(_fdLog);
+}
 
 void ProxyServer::initialization() {
     _socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -59,7 +64,7 @@ void ProxyServer::addNewClients(fd_set &readSet, std::vector<Client *> &clients)
     if (FD_ISSET(_socket, &readSet)) {
         fd = accept(_socket, 0, 0);
         if (fd > 0) {
-            clients.push_back(new Client(fd, _fdLog));
+            clients.push_back(new Client(fd, _dbPort, _dbIp, _fdLog));
             std::cout << YELLOW << "New client successfully connected" << DEFAULT << std::endl;
         }
     }
@@ -131,7 +136,7 @@ void ProxyServer::startMainLoop() {
         settingToFdSets(clients, maxFd, writeSet, readSet);
 
         if (select(maxFd + 1, &readSet, &writeSet, 0, 0) == -1) {
-            //todo exc
+            throw proxyServerRunningException();
         }
 
         addNewClients(readSet, clients);
@@ -144,6 +149,9 @@ void ProxyServer::startMainLoop() {
 
 
 const char * ProxyServer::initErrorException::what() const noexcept{
-    return ("Initial error");
+    return ("Error in initialization");
 }
 
+const char * ProxyServer::proxyServerRunningException::what() const throw() {
+    return ("Proxy running error");
+}

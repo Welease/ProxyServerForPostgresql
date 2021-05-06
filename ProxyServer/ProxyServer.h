@@ -13,7 +13,6 @@
 #include <list>
 #include "../Client/Client.h"
 
-
 # define DEFAULT "\e[39m\e[0m"
 # define GREEN "\e[92m"
 # define RED  "\e[31m"
@@ -26,7 +25,9 @@ class ProxyServer {
 
 private:
     std::string     _ip;
+    std::string     _dbIp;
     int             _port;
+    int             _dbPort;
     sockaddr_in     _sockAddr;
     socklen_t       _addrLen;
     int             _socket;
@@ -35,13 +36,18 @@ private:
 
 
 public:
-    ProxyServer(std::string & ip, int & port, int & fd);
+    ProxyServer(std::string & ip, std::string & dbIp,  int & port, int & dbPort, int & fd);
     ~ProxyServer();
 
     void initialization();
     void startMainLoop();
 
     class initErrorException : public std::exception {
+    public :
+        virtual const char * what() const throw();
+    };
+
+    class proxyServerRunningException : public std::exception {
     public :
         virtual const char * what() const throw();
     };

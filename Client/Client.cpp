@@ -1,15 +1,17 @@
 #include <cmath>
 #include "Client.h"
 
-Client::Client(int &sock, int & logFd) {
+Client::Client(int & sock, int & dbPort, std::string & dbIp, int & logFd) {
     _socket = sock;
+    _dbPort = dbPort;
+    _dbIp = dbIp;
     _logFd = logFd;
     _request = new DataChunks();
     _response = new DataChunks();
     _phase = start;
     _sendBytes = 0;
     fcntl(_socket, F_SETFL, O_NONBLOCK);
-    _dbConnector = new DbConnector();
+    _dbConnector = new DbConnector(_dbPort, _dbIp);
     _numOfRequest = 0;
     fillTypesMap();
 }
@@ -56,7 +58,7 @@ int Client::getIntFromHex(unsigned char *hex) {
             int(hex[2]) * int(std::pow(16, 2)) + int(hex[3]));
 }
 
-void Client::writeInfo(const char *header, size_t len1, const char *message, size_t len) {
+void Client::writeInfo(const char *header, size_t len1, const char *message, size_t len) const {
     write(_logFd, header, len1);
     for (size_t i = 0; i < len; ++i)
         if (message[i] != '\0') write(_logFd, &message[i], 1);
@@ -119,7 +121,7 @@ void Client::fillTypesMap() {
     messageTypes.insert(std::pair<unsigned char, std::string>('c', "CopyDone"));
     messageTypes.insert(std::pair<unsigned char, std::string>('f', "CopyFail"));
     messageTypes.insert(std::pair<unsigned char, std::string>('E', "Execute"));
-    messageTypes.insert(std::pair<unsigned char, std::string> ('H', "Flush"));
+    messageTypes.insert(std::pair<unsigned char, std::string>('H', "Flush"));
     messageTypes.insert(std::pair<unsigned char, std::string>('P', "Parse"));
     messageTypes.insert(std::pair<unsigned char, std::string>('D', "Describe"));
     messageTypes.insert(std::pair<unsigned char, std::string>('F', "FunctionCall"));

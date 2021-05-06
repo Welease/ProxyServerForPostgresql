@@ -9,12 +9,12 @@ private:
     int           _socket;
 
 public:
-    DbConnector();
+    DbConnector(int & port, std::string & host);
     ~DbConnector();
 
-    DataChunks* getResponseFromDb();
-    void        sendResponseToBd(DataChunks * request);
-    int         getSocket();
+    DataChunks* getResponseFromDb() const;
+    void        sendResponseToBd(DataChunks * request) const;
+    int         getSocket() const;
 };
 
 
